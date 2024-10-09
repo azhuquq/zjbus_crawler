@@ -1,0 +1,25 @@
+name: Fetch Road State
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 每天 UTC 0:00 执行
+
+jobs:
+  fetch-road-state:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+
+      - name: Fetch Road State Data
+        run: |
+          ${{ secrets.API_SCRIPT }}
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add road_state.json
+          git commit -m "Update road state data - $(date +'%Y-%m-%d')"
+          git push

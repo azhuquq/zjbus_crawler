@@ -15,12 +15,28 @@ jobs:
 
       - name: Fetch Road State Data
         run: |
-          ${{ secrets.API_SCRIPT }}
+          set -e  # 遇到错误时停止执行
+          ${{ secrets.API_SCRIPT }}  # 执行爬取脚本
+          
+          # 检查 HTTP 状态码是否为 200
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "API_ENDPOINT_URL")  # 替换为实际的 API 端点
+          if [ "$HTTP_STATUS" -ne 200 ]; then
+            echo "API response status code is $HTTP_STATUS, expected 200. Exiting..."
+            exit 1
+          fi
+
+          # 检查 lineinfos 数组的长度是否大于 0
+          if [ "$(jq '.lineinfos | length' road_state.json)" -le 0 ]; then
+            echo "lineinfos array is empty. Exiting..."
+            exit 1
+          fi
+        shell: bash
 
       - name: Commit and push changes
+        if: success()  # 只有当爬取成功时才继续
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add road_state.json
           git commit -m "Update road state data - $(date +'%Y-%m-%d')"
-          git push
+          git push --force  # 强制推送，覆盖远程仓库的变更

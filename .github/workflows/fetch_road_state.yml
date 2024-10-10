@@ -15,12 +15,7 @@ jobs:
 
       - name: Fetch Road State Data
         run: |
-          set -e
           ${{ secrets.API_SCRIPT }}
-          if [ ! -s road_state.json ]; then
-            echo "road_state.json is empty or missing. Exiting..."
-            exit 1
-        shell: bash
 
       - name: Check for 'busstation' in road_state.json
         run: |

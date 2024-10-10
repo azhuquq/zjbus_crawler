@@ -27,14 +27,6 @@ jobs:
           fi
         shell: bash
 
-      - name: Check for changes
-        run: |
-          if git diff --exit-code; then
-            echo "No changes detected, exiting..."
-            exit 0
-          fi
-        shell: bash
-
       - name: Commit and push changes
         if: success()
         run: |

@@ -2,8 +2,8 @@ name: Fetch Road State
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # 每天 UTC 0:00 执行
-  workflow_dispatch:  # 允许手动触发工作流
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   fetch-road-state:
@@ -11,27 +11,37 @@ jobs:
 
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@v3  # 使用 v3 版本
+        uses: actions/checkout@v3
 
       - name: Fetch Road State Data
         run: |
-          set -e  # 遇到错误时停止执行
-          ${{ secrets.API_SCRIPT }}  # 执行爬取脚本
-          if [ ! -s road_state.json ]; then  # 检查文件是否存在且非空
+          set -e
+          ${{ secrets.API_SCRIPT }}
+          if [ ! -s road_state.json ]; then
             echo "road_state.json is empty or missing. Exiting..."
-            exit 1  # 如果文件为空或不存在，则退出并标记为失败
+            exit 1
+        shell: bash
+
+      - name: Check for 'busstation' in road_state.json
+        run: |
+          if ! grep -q "busstation" road_state.json; then
+            echo "'busstation' not found in road_state.json. Exiting..."
+            exit 1
+          else
+            echo "'busstation' found, proceeding with the workflow..."
+          fi
         shell: bash
 
       - name: Check for changes
         run: |
           if git diff --exit-code; then
             echo "No changes detected, exiting..."
-            exit 0  # 没有更改时退出，防止继续提交操作
+            exit 0
           fi
         shell: bash
 
       - name: Commit and push changes
-        if: success()  # 只有当前一步成功时才继续
+        if: success()
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'

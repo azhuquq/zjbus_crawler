@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout the repo
-        uses: actions/checkout@v3  # 更新为 v3 版本
+        uses: actions/checkout@v3  # 使用 v3 版本
 
       - name: Fetch Road State Data
         run: |
@@ -20,11 +20,18 @@ jobs:
           if [ ! -s road_state.json ]; then  # 检查文件是否存在且非空
             echo "road_state.json is empty or missing. Exiting..."
             exit 1  # 如果文件为空或不存在，则退出并标记为失败
+        shell: bash
+
+      - name: Check for changes
+        run: |
+          if git diff --exit-code; then
+            echo "No changes detected, exiting..."
+            exit 0  # 没有更改时退出，防止继续提交操作
           fi
         shell: bash
 
       - name: Commit and push changes
-        if: success()  # 只有当爬取成功时才继续
+        if: success()  # 只有当前一步成功时才继续
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
